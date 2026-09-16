@@ -1,107 +1,99 @@
-# EventPro — Milestone 3: Event Intelligence, Agent Orchestration & Production Deployment
+# EventPro – Agentic AI-Based Smart Event Management Platform
 
-An AI-powered event management platform: registration & check-in, venue/speaker operations, sponsor & incident ops, an Event Intelligence Engine, and — as of this milestone — Agent Orchestration, real-time decision support, and a production-ready deployment.
+## 📌 Overview
 
-**New in Milestone 3:** see `docs/MILESTONE_3_SUMMARY.md` for exactly what was built against each of the 10 milestone objectives.
+**EventPro** is an Agentic AI-based Smart Event Management Operations Platform designed to simplify and automate event management activities. It provides a centralized system for managing **registrations, attendees, QR-based check-ins, venues, speakers, sessions, sponsors, incidents, and alerts**.
 
-## Quick start (Docker Compose — recommended)
+The platform also uses an **Event Intelligence Engine** and specialized AI agents to analyze event data and provide operational insights, recommendations, and alerts.
 
-```bash
-cp .env.example .env      # fill in real secrets (see comments in the file)
-docker compose up --build -d
+## 🎯 Objectives
+
+* Automate event registration and attendee management.
+* Enable QR-based attendee check-in.
+* Manage venues, speakers, sessions, and sponsors.
+* Detect speaker and scheduling conflicts.
+* Track incidents and operational alerts.
+* Provide AI-powered insights and recommendations.
+* Give organizers a centralized event operations dashboard.
+
+## 🚀 Key Features
+
+### 👥 Registration & Check-In
+
+* Attendee registration and management.
+* QR-token-based check-in for confirmed attendees.
+* Tracking of registration and check-in activity.
+
+### 🏢 Venue & Speaker Management
+
+* Venue allocation and management.
+* Session and speaker scheduling.
+* Detection of speaker scheduling conflicts.
+
+### 🤝 Sponsor Management
+
+* Manage sponsor information and sponsorship activities.
+
+### 🚨 Incident & Alert Management
+
+* Record and monitor event incidents.
+* Generate alerts for important operational situations.
+
+## 🤖 Agentic AI
+
+EventPro uses specialized AI agents for different event operations:
+
+* **Overview Agent** – Provides an overall event summary.
+* **Pattern Insights Agent** – Identifies meaningful patterns in event data.
+* **Registration Activity Agent** – Analyzes registration and attendee activity.
+* **Operational Alerting Agent** – Identifies situations requiring attention.
+* **Sponsor & Incident Agent** – Provides insights related to sponsors and incidents.
+
+## 🧠 Event Intelligence Engine
+
+The Event Intelligence Engine collects information from registrations, check-ins, sessions, scheduling, venues, sponsors, incidents, and alerts.
+
+```text
+Event Data
+    ↓
+Event Intelligence Engine
+    ↓
+AI Agents
+    ↓
+Insights / Recommendations / Alerts
+    ↓
+Organizer Dashboard
 ```
 
-Open `http://localhost:8080`. Full instructions, environment variables, and a manual/bare-metal alternative: `docs/DEPLOYMENT.md`.
+## 🛠️ Technology Stack
 
-## Quick start (local dev, no Docker)
+* **Frontend:** React.js, HTML, CSS, JavaScript
+* **Backend:** Node.js, Express.js
+* **Database:** MongoDB
+* **AI:** Agentic AI / LLM-based intelligence
+* **Tools:** Git, GitHub, VS Code, Postman
 
-```bash
-# Database
-createdb eventpro
-psql eventpro -f backend/config/schema.sql
-psql eventpro -f backend/config/schema_indexes.sql
+## 🔄 Workflow
 
-# Backend
-cd backend
-cp .env.example .env      # fill in DATABASE_URL, JWT_SECRET, etc.
-npm install
-npm run dev                # http://localhost:5000
+1. Organizer creates and manages the event.
+2. Attendees register for the event.
+3. Venues, speakers, and sessions are scheduled.
+4. Confirmed attendees check in using QR tokens.
+5. Event data is collected and processed.
+6. AI agents analyze the data.
+7. The system provides insights, recommendations, and alerts.
+8. Organizers monitor the event through the dashboard.
 
-# Frontend (separate terminal)
-cd frontend
-npm install
-npm run dev                # http://localhost:5173
-```
+## 🔮 Future Enhancements
 
-## Folder structure
+* Real-time analytics
+* Mobile application
+* Automated notifications
+* Advanced predictive analytics
+* More specialized AI agents
+* Automated incident response
 
-```
-eventpro-project/
-├── frontend/                       React (Vite) dashboard UI
-│   ├── Dockerfile, nginx.conf      Production image (Milestone 3)
-│   └── src/
-│       ├── api.js                  Fetch layer + apiStream() for SSE (Milestone 3)
-│       └── pages/
-│           └── ExecutiveDashboardPage.jsx   Live Command Center panel (Milestone 3)
-│
-├── backend/                        Node.js + Express API
-│   ├── Dockerfile                  Production image (Milestone 3)
-│   ├── controllers/
-│   │   ├── intelligence.controller.js       Event Intelligence Engine
-│   │   ├── orchestration.controller.js      Orchestration HTTP layer (Milestone 3)
-│   │   └── health.controller.js             Liveness/readiness (Milestone 3)
-│   ├── services/
-│   │   ├── agents.js                        Agent Registry (Milestone 3)
-│   │   ├── orchestrator.js                  Parallel Agent Orchestrator (Milestone 3)
-│   │   └── workflows/                       Reactive Workflow Engine (Milestone 3)
-│   │       ├── engine.js                        generic sequencing/approval/escalation engine
-│   │       ├── speakerCancellation.js            Scenario 1: speaker cancellation
-│   │       ├── sponsorPerformance.js             Scenario 2: sponsor performance
-│   │       ├── venueIssue.js                     Scenario 3: venue issue
-│   │       ├── highCrowd.js                      Scenario 4: high crowd detection
-│   │       └── index.js                          registers all workflows on boot
-│   ├── middleware/
-│   │   ├── security.middleware.js           Rate limiting (Milestone 3)
-│   │   └── error.middleware.js              Centralized error handling (Milestone 3)
-│   ├── utils/cache.js                       In-memory TTL cache (Milestone 3)
-│   ├── utils/metrics.js                     In-process metrics registry → /api/metrics (Milestone 3)
-│   ├── config/schema_indexes.sql            Performance indexes (Milestone 3)
-│   └── tests/                               Jest + Supertest suite (Milestone 3)
-│
-├── scripts/
-│   ├── backup.sh                    Database backup (pg_dump, retention pruning) (Milestone 3)
-│   └── restore.sh                   Database restore from a backup file (Milestone 3)
-│
-├── docker-compose.yml               Postgres + backend + frontend (Milestone 3)
-├── .github/workflows/ci.yml         Test + build CI (Milestone 3)
-└── docs/
-    ├── MILESTONE_3_SUMMARY.md       Objective-by-objective delivery map
-    ├── ARCHITECTURE.md
-    ├── API.md
-    ├── AGENT_ORCHESTRATION.md
-    ├── DEPLOYMENT.md
-    └── TESTING.md
-```
+## 👥 Project
 
-## Documentation
-
-| Doc | Covers |
-|---|---|
-| `docs/MILESTONE_3_SUMMARY.md` | What was built, mapped to each of the 10 objectives |
-| `docs/ARCHITECTURE.md` | System diagram, layers, security posture |
-| `docs/API.md` | Every endpoint, grouped by module, with the orchestration report shape |
-| `docs/AGENT_ORCHESTRATION.md` | How the Agent Registry + Orchestrator work, and how to add a new agent |
-| `docs/DEPLOYMENT.md` | Docker Compose & manual deployment, env vars, scaling notes |
-| `docs/TESTING.md` | How to run the automated suite, and the manual E2E checklist |
-
-## Status by milestone
-
-- **Milestone 1** — Registration Intelligence & Attendee Management (auth, events, registration, check-in, dashboard basics).
-- **Milestone 2** — Venue/Speaker Operations, Sponsor/Incident Ops, first AI-integrated endpoints, the Event Intelligence Engine.
-- **Milestone 3** (this one) — Agent Orchestration, real-time decision support, end-to-end testing, security/reliability hardening, performance optimization, and a production-ready Docker deployment. Details: `docs/MILESTONE_3_SUMMARY.md`.
-
-## Known gaps / next steps
-
-- Frontend automated tests (Vitest/Playwright) — not yet added; see `docs/TESTING.md` for the plan and current CI gate (a clean production build).
-- Real ML models (no-show prediction, attendee segmentation) are still out of scope — the AI-assisted endpoints use live data + an LLM (Gemini), not trained models. New models can be added as agents to the orchestrator without changing its design.
-- Multi-source registration ingestion (Google Forms, Eventbrite, CSV/Excel upload) is not implemented.
+**Project Name:** EventPro
+**Type:** Agentic AI-Based Smart Event Management Platform

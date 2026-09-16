@@ -1,0 +1,86 @@
+name: eventpro
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: eventpro
+      POSTGRES_USER: eventpro
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eventpro_dev_password}
+    volumes:
+      - eventpro_pgdata:/var/lib/postgresql/data
+      - ./backend/config/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql:ro
+      - ./backend/config/schema_indexes.sql:/docker-entrypoint-initdb.d/2-indexes.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eventpro -d eventpro"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      DATABASE_URL: postgresql://eventpro:${POSTGRES_PASSWORD:-eventpro_dev_password}@postgres:5432/eventpro
+      JWT_SECRET: ${JWT_SECRET:?set a real JWT_SECRET in your .env file}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+      ADMIN_SIGNUP_CODE: ${ADMIN_SIGNUP_CODE:-change_this_invite_code}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash-lite}
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/api/health', r => process.exit(r.statusCode===200?0:1)).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE: ${VITE_API_BASE:-http://localhost:5000/api}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+  # Optional nightly backups (see docs/DEPLOYMENT.md). Not started by
+  # `docker compose up` on its own — enable with:
+  #   docker compose --profile backup up -d
+  backup:
+    image: postgres:16-alpine
+    profiles: ["backup"]
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-eventpro_dev_password}
+      RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - ./backups:/backups
+    entrypoint: >
+      sh -c '
+        echo "Backup service started — dumping every 24h, keeping $$RETENTION_DAYS days.";
+        while true; do
+          TS=$$(date +%Y%m%d_%H%M%S);
+          pg_dump -h postgres -U eventpro eventpro | gzip > /backups/eventpro_$$TS.sql.gz;
+          echo "Backup written: eventpro_$$TS.sql.gz";
+          find /backups -name "eventpro_*.sql.gz" -mtime +$$RETENTION_DAYS -print -delete;
+          sleep 86400;
+        done
+      '
+
+volumes:
+  eventpro_pgdata:
